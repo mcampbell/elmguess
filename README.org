@@ -31,5 +31,7 @@ As I learn stuff, I'll document them here.
 
 - [[https://scotch.io/tutorials/automate-your-tasks-easily-with-gulp-js][Did a gulp tutorial]]
   - Learned a bit about the ~http~ and ~st~ packages in npm.
+- Came up with yasnippet template for the html to wrap an elm app.
+
 
 
