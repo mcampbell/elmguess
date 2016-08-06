@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Guess A Number!</title>
+        <!--[if lt IE 9]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <link rel="stylesheet" href="app.css">
+    </head>
+    <body>
+        <header>
+            Guess A Number!
+        </header>
+        <main>
+            <div id="explanation">
+                <p>I'm thinking of a number between 1 and 100.  Try to guess what it is.</p>
+            </div>
+            <div id="guess">
+                <input type="text" /> <button type="button">Guess!</button>
+            </div>
+            <div id="result">
+                <p class="toohigh">Too High!</p>
+            </div>
+            <div id="guesslist">
+                <div id="guesscount">
+                    <div>Guesses:</div><div>3</div>
+                </div>
+                <div id="guesses">
+                    <ul>
+                        <li><div>10</div><div class="toolow">low</div></li>
+                        <li><div>99</div><div class="toohigh">high</div></li>
+                        <li><div>44</div><div class="justright">right</div></li>
+                    </ul>
+                </div>
+            </div>
+            <div id="startover"><button type="button">Start Over</button></div>
+        </main>
+    </body>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+</html>
