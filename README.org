@@ -30,5 +30,6 @@ be awful, but it's a learning exercise for me.
 As I learn stuff, I'll document them here.
 
 - [[https://scotch.io/tutorials/automate-your-tasks-easily-with-gulp-js][Did a gulp tutorial]]
+  - Learned a bit about the ~http~ and ~st~ packages in npm.
 
 

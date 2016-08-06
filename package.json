@@ -18,6 +18,8 @@
   "homepage": "https://github.com/mcampbell/elmguess#readme",
   "devDependencies": {
     "gulp": "^3.9.1",
-    "gulp-util": "^3.0.7"
+    "clear": "0.0.1",
+    "gulp-util": "^3.0.7",
+    "st": "^1.1.0"
   }
 }
