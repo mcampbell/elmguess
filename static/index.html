@@ -1,2 +1,19 @@
+<!doctype html>
+<html lang="en">
 
-<b>index.html hello world</b>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Guess A Number!</title>
+        <link rel="stylesheet" href="app.css">
+    </head>
+
+    <body>
+        <div id="app"></div>
+        <script src="bundle.js"></script>
+        <script>
+         var app = Elm.Main.embed(document.getElementById("app"));
+        </script>
+    </body>
+
+</html>

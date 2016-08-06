@@ -11,7 +11,7 @@ var gulp = require('gulp'),
     clear = require('clear');
 
 // What do run to do our compile
-var cmd = 'elm make ./src/Main.elm --output ./bundle.js';
+var cmd = 'elm make ./src/Main.elm --output ./static/bundle.js';
 
 gulp.task('default', ['server', 'watch', 'elm']);
 

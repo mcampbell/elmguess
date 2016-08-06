@@ -92,3 +92,4 @@ jspm_packages
 .node_repl_history
 /elm.js
 /bundle.js
+/static/bundle.js
