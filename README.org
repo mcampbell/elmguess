@@ -2,6 +2,11 @@
 * elmguess
 My Toy "Guess a Number" app written in [[http://elm-lang.org][Elm]].
 
+** To Run This
+- git clone
+- run ~gulp~ (this gets a server going)
+- navigate to ~http://localhost:4000~
+
 ** What I'm Trying to Accomplish
 
 This is a simple app, for sure, and likely far too "toy" for anyone
