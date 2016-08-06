@@ -1,0 +1,23 @@
+{
+  "name": "elmguess",
+  "version": "1.0.0",
+  "description": "Simple Guess-A-Number game written in Elm",
+  "main": "bundle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcampbell/elmguess.git"
+  },
+  "author": "Michael Campbell",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mcampbell/elmguess/issues"
+  },
+  "homepage": "https://github.com/mcampbell/elmguess#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-util": "^3.0.7"
+  }
+}
