@@ -144,6 +144,7 @@ mainHtml model =
         [ explanation model
         , takeAGuess model
         , guessResult model
+        , pastGuesses model
         , startOver model
         ]
 
