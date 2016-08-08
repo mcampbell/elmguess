@@ -13,30 +13,53 @@ import String exposing (..)
 type alias Model =
     { currentGuess : String
     , pastGuesses : List PastGuess
-    , guessResult : Maybe String
+    , guessResult : Maybe GuessResult
     , secretAnswer : Int
     }
 
 
 type alias PastGuess =
     { numericGuess : Int
-    , result : String
+    , result : GuessResult
     }
 
 
-initModel : ( Model, Cmd Msg )
+initModel : Model
 initModel =
-    ( Model "" [] Nothing 42, Cmd.none )
+    Model "" [] Nothing 42
 
 
 
 -- update
 
 
+type GuessResult
+    = High
+    | Low
+    | Correct
+    | Error String
+
+
 type Msg
     = Input String
     | SubmitGuess
     | StartOver
+
+
+toGrString : GuessResult -> String
+toGrString gr =
+    case gr of
+        High ->
+            "Too High"
+
+        Low ->
+            "Too Low"
+
+        Correct ->
+            "Right"
+
+        Error str ->
+            "Error: " ++ str
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -46,24 +69,55 @@ update msg model =
             ( { model | currentGuess = guess, guessResult = Nothing }, Cmd.none )
 
         SubmitGuess ->
-            ( validateGuess model, Cmd.none )
+            ( parseGuess model, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        StartOver ->
+            ( initModel, Cmd.none )
 
 
-validateGuess : Model -> Model
-validateGuess model =
+parseGuess : Model -> Model
+parseGuess model =
     let
         parsed =
             String.toInt model.currentGuess
     in
         case parsed of
             Ok value ->
-                { model | guessResult = Just ("Got value " ++ model.currentGuess) }
+                validateNumberGuess model value
 
             Err msg ->
-                { model | guessResult = Just ("Error: " ++ (toString msg)) }
+                { model | currentGuess = "", guessResult = Just (Error msg) }
+
+
+validateNumberGuess : Model -> Int -> Model
+validateNumberGuess model guess =
+    if guess == model.secretAnswer then
+        let
+            r =
+                Correct
+
+            pastGuess =
+                PastGuess guess r
+        in
+            { model | guessResult = Just r, currentGuess = "", pastGuesses = pastGuess :: model.pastGuesses }
+    else if guess < model.secretAnswer then
+        let
+            r =
+                Low
+
+            pastGuess =
+                PastGuess guess r
+        in
+            { model | guessResult = Just r, currentGuess = "", pastGuesses = pastGuess :: model.pastGuesses }
+    else
+        let
+            r =
+                High
+
+            pastGuess =
+                PastGuess guess r
+        in
+            { model | guessResult = Just r, currentGuess = "", pastGuesses = pastGuess :: model.pastGuesses }
 
 
 
@@ -89,6 +143,8 @@ mainHtml model =
     main' []
         [ explanation model
         , takeAGuess model
+        , guessResult model
+        , startOver model
         ]
 
 
@@ -107,6 +163,83 @@ takeAGuess model =
         ]
 
 
+guessResult : Model -> Html Msg
+guessResult model =
+    p []
+        [ text
+            (case model.guessResult of
+                Nothing ->
+                    ""
+
+                Just val ->
+                    toString val
+            )
+        ]
+
+
+pastGuesses : Model -> Html Msg
+pastGuesses model =
+    div []
+        [ pastGuessesCount model
+        , pastGuessesList model
+        ]
+
+
+pastGuessesCount : Model -> Html Msg
+pastGuessesCount model =
+    let
+        guessCount =
+            toString (List.length model.pastGuesses)
+    in
+        div []
+            [ div [] [ text "Guesses:" ]
+            , div [] [ text guessCount ]
+            ]
+
+
+pastGuessesList : Model -> Html Msg
+pastGuessesList model =
+    let
+        guesses =
+            model.pastGuesses
+    in
+        div [ id "guesses" ]
+            [ ul [] (List.map pastGuessItem guesses) ]
+
+
+pastGuessItem : PastGuess -> Html Msg
+pastGuessItem pastGuess =
+    let
+        ( cls, txt ) =
+            listItemClassText pastGuess
+    in
+        li []
+            [ div [] [ text (toString pastGuess.numericGuess) ]
+            , div [ class cls ] [ text txt ]
+            ]
+
+
+listItemClassText : PastGuess -> ( String, String )
+listItemClassText pg =
+    case pg.result of
+        High ->
+            ( "toohigh", (toGrString pg.result) )
+
+        Low ->
+            ( "toolow", (toGrString pg.result) )
+
+        Correct ->
+            ( "right", (toGrString pg.result) )
+
+        Error msg ->
+            ( "error", (toGrString pg.result) )
+
+
+startOver : Model -> Html Msg
+startOver model =
+    button [ type' "button", onClick StartOver ] [ text "Start Over" ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "guessnumber" ]
@@ -118,7 +251,7 @@ view model =
 
 main =
     App.program
-        { init = initModel
+        { init = ( initModel, Cmd.none )
         , view = view
         , update = update
         , subscriptions = subscriptions
