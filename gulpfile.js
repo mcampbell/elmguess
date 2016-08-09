@@ -10,10 +10,14 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     clear = require('clear');
 
-// What do run to do our compile
-var cmd = 'elm make ./src/Main.elm --output ./static/bundle.js';
+// https://github.com/gulpjs/gulp/blob/master/docs/recipes/delete-files-folder.md
+var del = require('del');
 
-gulp.task('default', ['server', 'watch', 'elm']);
+// What do run to do our compile
+var elm_cmd = 'elm make ./src/Main.elm --output ./dist/bundle.js';
+
+
+gulp.task('default', ['server', 'watch', 'elm', 'static']);
 
 // Taken from https://github.com/knowthen/elm/tree/master/05%20scorekeeper-starter
 gulp.task('watch', function() {
@@ -24,20 +28,29 @@ gulp.task('server', function(done) {
     gutil.log(gutil.colors.blue('Starting server at http://localhost:4000'));
     http.createServer(
         st({
-            path: __dirname + '/static',
+            path: __dirname + '/dist',
             index: 'index.html',
             cache: false
         })
     ).listen(4000, done);
 });
 
-gulp.task('elm', function(cb) {
-    exec(cmd, function(err, stdout, stderr) {
+gulp.task('elm', function(cb) { // cb to let gulp know the task is done; runs async
+    exec(elm_cmd, function(err, stdout, stderr) {
         if (err){
             gutil.log(gutil.colors.red('elm make: '),gutil.colors.red(stderr));
         } else {
             gutil.log(gutil.colors.green('elm make: '), gutil.colors.green(stdout));
         }
-        cb();  // what does this do
+        cb();
     });
+});
+
+gulp.task('static', function() {
+    return gulp.src('static/*')
+        .pipe(gulp.dest('dist/'));
+});
+
+gulp.task('clean', function() {
+    return del( ['dist/'] );
 });

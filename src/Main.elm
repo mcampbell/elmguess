@@ -1,19 +1,32 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as App
 import String exposing (..)
+import Random exposing (..)
+import Time exposing (..)
 
 
 -- Model
+
+
+prng : Random.Generator Int
+prng =
+    Random.int 1 100
+
+
+
+-- port gibberish : Int
 
 
 type alias Model =
     { currentGuess : String
     , pastGuesses : List PastGuess
     , guessResult : Maybe GuessResult
+    , currentTime : Float
+    , seed : Maybe Seed
     , secretAnswer : Int
     }
 
@@ -26,7 +39,13 @@ type alias PastGuess =
 
 initModel : Model
 initModel =
-    Model "" [] Nothing 42
+    { currentGuess = ""
+    , pastGuesses = []
+    , guessResult = Nothing
+    , currentTime = 0.0
+    , seed = Nothing
+    , secretAnswer = 0
+    }
 
 
 
@@ -44,6 +63,7 @@ type Msg
     = Input String
     | SubmitGuess
     | StartOver
+    | Tick Float
 
 
 toGrString : GuessResult -> String
@@ -72,7 +92,44 @@ update msg model =
             ( parseGuess model, Cmd.none )
 
         StartOver ->
-            ( initModel, Cmd.none )
+            ( generateNewAnswer model, Cmd.none )
+
+        Tick t ->
+            ( setInitialSeedAndAnswer model t, Cmd.none )
+
+
+setInitialSeedAndAnswer : Model -> Float -> Model
+setInitialSeedAndAnswer model t =
+    let
+        initSeed =
+            t |> round |> initialSeed
+
+        ( newAnswer, newSeed ) =
+            Random.step prng initSeed
+    in
+        case model.seed of
+            Nothing ->
+                { model | seed = Just newSeed, secretAnswer = newAnswer, currentTime = t }
+
+            _ ->
+                { model | currentTime = t }
+
+
+generateNewAnswer : Model -> Model
+generateNewAnswer model =
+    let
+        oldSeed =
+            case model.seed of
+                Nothing ->
+                    model.currentTime |> round |> initialSeed
+
+                Just s ->
+                    s
+
+        ( newAnswer, newSeed ) =
+            Random.step prng oldSeed
+    in
+        { model | seed = Just newSeed, secretAnswer = newAnswer, pastGuesses = [], guessResult = Nothing, currentGuess = "" }
 
 
 parseGuess : Model -> Model
@@ -126,7 +183,7 @@ validateNumberGuess model guess =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every second Tick
 
 
 
@@ -166,21 +223,27 @@ takeAGuess model =
 
 guessResult : Model -> Html Msg
 guessResult model =
-    p []
-        [ text
-            (case model.guessResult of
+    let
+        gr =
+            model.guessResult
+
+        ( cls, txt ) =
+            case gr of
                 Nothing ->
-                    ""
+                    ( "", "" )
 
                 Just val ->
-                    toString val
-            )
-        ]
+                    ( resultClass val, toGrString val )
+    in
+        div [ id "result" ]
+            [ p [ class cls ]
+                [ text txt ]
+            ]
 
 
 pastGuesses : Model -> Html Msg
 pastGuesses model =
-    div []
+    div [ id "guesslist" ]
         [ pastGuessesCount model
         , pastGuessesList model
         ]
@@ -192,7 +255,7 @@ pastGuessesCount model =
         guessCount =
             toString (List.length model.pastGuesses)
     in
-        div []
+        div [ id "guesscount" ]
             [ div [] [ text "Guesses:" ]
             , div [] [ text guessCount ]
             ]
@@ -222,23 +285,30 @@ pastGuessItem pastGuess =
 
 listItemClassText : PastGuess -> ( String, String )
 listItemClassText pg =
-    case pg.result of
+    ( resultClass pg.result, toGrString pg.result )
+
+
+resultClass : GuessResult -> String
+resultClass gr =
+    case gr of
         High ->
-            ( "toohigh", (toGrString pg.result) )
+            "toohigh"
 
         Low ->
-            ( "toolow", (toGrString pg.result) )
+            "toolow"
 
         Correct ->
-            ( "right", (toGrString pg.result) )
+            "justright"
 
         Error msg ->
-            ( "error", (toGrString pg.result) )
+            "error"
 
 
 startOver : Model -> Html Msg
 startOver model =
-    button [ type' "button", onClick StartOver ] [ text "Start Over" ]
+    div [ id "startover" ]
+        [ button [ type' "button", onClick StartOver ] [ text "Start Over" ]
+        ]
 
 
 view : Model -> Html Msg
@@ -246,7 +316,7 @@ view model =
     div [ class "guessnumber" ]
         [ headerHtml model
         , mainHtml model
-        , p [] [ toString model |> text ]
+          --        , p [] [ text (toString model) ]
         ]
 
 

@@ -33,7 +33,7 @@ awful, but it's a learning exercise for me. I've just completed the
 knowthen.com [[http://courses.knowthen.com/courses/elm-for-beginners][Elm course]] for beginners, which has an even more
 complicated app than this as the example, but this is me doing the
 layout and everything from scratch, rather than following along
-someone else's work. Too, the course has pre-rolled CSS, and I don't
+someone else's work. Too, the course has pre-rolled CSS, and I don't,
 so I'll be doing that from scratch too.
 
 ** What I Actually Accomplished
@@ -41,6 +41,12 @@ As I learn stuff, I'll document them here.
 
 - [[https://scotch.io/tutorials/automate-your-tasks-easily-with-gulp-js][Did a gulp tutorial]]
   - Learned a bit about the ~http~ and ~st~ packages in npm.
-- Came up with yasnippet template for the html to wrap an elm app.
+  - and ~del~
+- Came up with an emacs yasnippet template for the html to wrap an elm
+  app. 
 - Futzed around with CSS.  I know I need a lot of work here.  Going to
   ask some colleages for help/review.
+- Realized that having a static html page to do the css work on first
+  made it a lot easier as I went.
+- I did all the code and had the output unstyled, then styled it last.
+  Not sure if this was a good idea or not.
