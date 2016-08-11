@@ -52,3 +52,5 @@ As I learn stuff, I'll document them here.
   Not sure if this was a good idea or not.
 - Hacked up a way to get an initial seed for random numbers using a
   time subscription.  This is maddeningly hard.
+- Undid my hacked up seed, and kind of figured out how to do this with a proper Task and
+  Time.now.  It's still maddeningly hard.
