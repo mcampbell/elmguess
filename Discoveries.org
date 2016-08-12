@@ -1,0 +1,171 @@
+#+OPTIONS: toc:nil
+
+* Discoveries 
+
+** Getting The Current Time In Elm (Or "How I Figured Out Tasks")
+
+*** Background
+
+Before we start, I should note a few things. First, I'm not a UI guy. I'm not a javascript
+guy. You want microservices fronting a REST interface written in a JVM language running on
+docker? I can do that. Make a good looking UI or responsive single-page-app in javascript?
+Nope. 
+
+I picked up Elm because I like functional programming languages (but haven't had a LOT of
+experience here either), and wanted to try something new. I found Elm and after about 5
+minutes of the [[http://courses.knowthen.com/courses/elm-for-beginners][Elm for Beginners]] course, I was hooked.
+
+So, I finished the course and began writing my own small app to learn more; it is the
+classic "guess the number" game, where you try to guess the random number the computer has
+picked, and it tells you if you're too high, low, or just right.  And, it keeps a tally
+and list of your previous attempts.  And, you can start over.  
+
+So, TL;DR:
+
+- I don't know Elm.
+- I don't have much FP experience.
+- I don't really know javascript.
+- I'm new at all of this; this is a learning experience.
+
+Given that, doubtless everything that follows will be childs play for most of you.  But it
+took me a long time, so I wanted to document it.  Maybe it'll help someone else, maybe
+not, but it solidifies things in my mind to write them out.
+
+*** The Problem
+
+So, my use case was simple; I needed a way to seed a random number generator. It became
+clear that based on the purity of Elm functions, what I needed in order to get some random
+numbers, was... a random number.
+
+Well, perhaps not TRULY random, but at least "different enough", every time my app
+started. Elm provides a way to generate random numbers once you get that first one, but I
+needed the first one.
+
+One obvious and time honored way to do this is to use "current time".  It's different
+enough from 0, and different enough between program runs that this should be sufficient. 
+
+*** What Didn't Work
+
+A quick look on the web showed a number of ways to do this, but none of them quite worked
+for me.
+
+I immediately eliminated solutions that used "Signals". I don't know what those are, but
+from the Elm blog talking about version 0.17+, they're not "the way we do things anymore",
+so I didn't want to destroy this tenuous grasp of what I know of Elm with things that
+might just confuse me rather than help.
+
+The next candidate was using a ~port~.  The presumption here is that the ~port~ would be a
+way to interop with the javascript into which my Elm app was embedded, and then use that
+javascript to pass in the current time or an actual random number generated from
+javascript, which already uses 'currentTime' as its default seed.
+
+This was a no-go, partially because I hadn't exhausted all the places on the web were
+ports are documented, but I couldn't find anything that made sense to me.  Too, the
+compiler gave me an uncharacteristic dead end when I tried to ape some code from the web. 
+
+#+BEGIN_SRC 
+Port `currentTime` has an invalid type.
+
+118| port currentTime : Float
+     ^^^^^^^^^^^^^^^^^^^^^^^^
+You are saying it should be:
+
+    Float
+
+But you need to use the particular format described here:
+<http://guide.elm-lang.org/effect_managers/>
+#+END_SRC
+
+But "here" doesn't actually have *any formatting advice whatsoever*!  =(
+
+*** What Did Work
+
+This isn't pretty, and I'm embarassed to admit it, but my first working version of the
+code did this:
+
+- Initialize the model to include a ~Maybe Seed~ value of ~Nothing~
+- set up a "Time" subscription to tick me the time every second
+- the update case for that would check the model to for a ~Nothing~ seed, if set it if so
+  - then use the ~Random~ class to generate a new "secret answer" and new seed based on
+    the seed it just defined
+
+This actually works fine, but has 2 glaring deficiencies:
+- it's firing an event every second, when only one event is needed
+- the app isn't TRULY initialized with a "secret answer" to guess until a second has
+  elapsed
+
+*** What Worked Better
+
+So the obvious better solution was [[http://package.elm-lang.org/packages/elm-lang/core/4.0.5/Time#now][~Time.now~]], but I totally didn't get how ~Task~ works.
+
+~Time.now~ is defined as ~now : Task x Time~. Wat? "Task" times "Time"? This makes zero
+sense. Of course it would, because I misread the "x" as a times/multiplication symbol.
+
+#+BEGIN_QUOTE
+I'll take a sidebar here and there to explain some things as I have come to understand
+them.
+
+First of all, when a type in Elm is listed as a lowercased word, that means it can be ANY
+type; this is just a placeholder for whatever type you pass it. In languages that support
+Generics, this is often denoted as ~[T]~ or ~<T>~. When you see the same lowercased word
+repeated, as we will soon, that just indicates that those can still be any type, but they
+have to be the same one for each instance of the lowercased word.
+#+END_QUOTE
+
+Ok, I got past that. The ~x~ is a type..."placeholder". So the ~now~ function is of type
+~Task <something> Time~. So what's ~Task~? It's listed as a type /alias/; [[http://package.elm-lang.org/packages/elm-lang/core/4.0.5/Task][~type alias Task
+err ok~]].
+
+#+BEGIN_QUOTE
+Some type annotations still throw me a bit.  Some builtins like ~List~ I get, because I'm
+used to ~Lists~, so ~List String~ makes sense.  But when I see something like ~Task~, I'm
+coming to get a grudging understanding by thinking of them as "Holders".  Task is a
+"holder" of an ~err~, and an ~ok~.
+#+END_QUOTE
+
+So back to Time.now. Time.now is Task, that much is clear; but a Task of what? It looks
+like it's a Task of "whatever the hell I want", and a Time (which I found out is really
+just a type alias for ~Float~. This will become important later.) 
+
+Given the fact that Task is a holder of an err and an ok, it appears that the Time.now
+task really doesn't care about any error, but when the task DOES work, it uses a Time (nee
+Float) to carry the data.
+
+As is documented, none of this actually /does/ anything.  You still have to tell the Task
+to run, and that's done with ~Task.perform~.  This has a gem of a type signature:
+
+[[http://package.elm-lang.org/packages/elm-lang/core/4.0.5/Task#perform][perform : (x -> msg) -> (a -> msg) -> Task x a -> Cmd msg]]
+
+Sweet fancy moses.  So let's break that down.  Currying and partial application pedantry
+aside, we can see this takes 3 parameters:
+- a function that takes an 'x' and returns a 'msg'
+- a function that takes an 'a' and returns a 'msg'
+- a Task, holder of an 'x' and an 'a'
+
+And returns... a Cmd, holder of a 'msg'
+
+We know the concrete type of our Task; it's the Time.now Task, which is a Task, holder of
+an 'x' and a Time.  We also know, although I haven't documented it here, that *our* 'msg'
+type is type Msg, which is our unioned type that we're using in our ~update~ method.
+
+So we can start making sense of the type placeholders a little. We need to pass perform:
+- a function that takes an 'x' and returns a Msg
+- a function that takes a Time (nee Float) and returns a Msg
+- Time.now
+
+And we'll get back a ~Cmd Msg~.
+
+The third parameter is done.  The second one might seem harder, but you know what takes a
+thing and returns a Msg?  *All of our unioned Msg constructors*.  In my case, I set up my
+union like so:
+
+#+BEGIN_SRC 
+type Msg
+    = Input String
+    | SubmitGuess
+    | StartOver
+    | TimeSuccess Float
+#+END_SRC
+
+So I can simply pass ~TimeSuccess~ as the second parameter, since using it in its
+constructor context is in fact a "function that takes a Time(Float) and returns a Msg". 
