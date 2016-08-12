@@ -7,6 +7,7 @@ import Html.App as App
 import String exposing (..)
 import Random exposing (..)
 import Time exposing (..)
+import Task exposing (..)
 
 
 -- Model
@@ -63,7 +64,8 @@ type Msg
     = Input String
     | SubmitGuess
     | StartOver
-    | Tick Float
+    | TimeFail
+    | TimeSuccess Float
 
 
 toGrString : GuessResult -> String
@@ -94,25 +96,23 @@ update msg model =
         StartOver ->
             ( generateNewAnswer model, Cmd.none )
 
-        Tick t ->
-            ( setInitialSeedAndAnswer model t, Cmd.none )
+        TimeFail ->
+            ( model, Cmd.none )
+
+        TimeSuccess t ->
+            let
+                initSeed =
+                    initialSeed (round t)
+
+                ( newAnswer, newSeed ) =
+                    Random.step prng initSeed
+            in
+                ( { model | secretAnswer = newAnswer, seed = Just newSeed, currentTime = t }, Cmd.none )
 
 
-setInitialSeedAndAnswer : Model -> Float -> Model
-setInitialSeedAndAnswer model t =
-    let
-        initSeed =
-            t |> round |> initialSeed
-
-        ( newAnswer, newSeed ) =
-            Random.step prng initSeed
-    in
-        case model.seed of
-            Nothing ->
-                { model | seed = Just newSeed, secretAnswer = newAnswer, currentTime = t }
-
-            _ ->
-                { model | currentTime = t }
+divineCurrentTime : Cmd Msg
+divineCurrentTime =
+    Task.perform (\_ -> TimeFail) TimeSuccess Time.now
 
 
 generateNewAnswer : Model -> Model
@@ -120,11 +120,11 @@ generateNewAnswer model =
     let
         oldSeed =
             case model.seed of
-                Nothing ->
-                    model.currentTime |> round |> initialSeed
-
                 Just s ->
                     s
+
+                _ ->
+                    initialSeed 0
 
         ( newAnswer, newSeed ) =
             Random.step prng oldSeed
@@ -183,7 +183,7 @@ validateNumberGuess model guess =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every second Tick
+    Sub.none
 
 
 
@@ -203,6 +203,7 @@ mainHtml model =
         , guessResult model
         , pastGuesses model
         , startOver model
+        , p [] [ text (toString model) ]
         ]
 
 
@@ -322,7 +323,7 @@ view model =
 
 main =
     App.program
-        { init = ( initModel, Cmd.none )
+        { init = ( initModel, divineCurrentTime )
         , view = view
         , update = update
         , subscriptions = subscriptions

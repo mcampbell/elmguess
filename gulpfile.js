@@ -13,6 +13,7 @@ var gulp = require('gulp'),
 // https://github.com/gulpjs/gulp/blob/master/docs/recipes/delete-files-folder.md
 var del = require('del');
 
+
 // What do run to do our compile
 var elm_cmd = 'elm make ./src/Main.elm --output ./dist/bundle.js';
 
@@ -22,6 +23,7 @@ gulp.task('default', ['server', 'watch', 'elm', 'static']);
 // Taken from https://github.com/knowthen/elm/tree/master/05%20scorekeeper-starter
 gulp.task('watch', function() {
     gulp.watch('**/*.elm', ['elm']);
+    gulp.watch('static/*', ['static']);
 });
 
 gulp.task('server', function(done) {
@@ -48,9 +50,11 @@ gulp.task('elm', function(cb) { // cb to let gulp know the task is done; runs as
 
 gulp.task('static', function() {
     return gulp.src('static/*')
-        .pipe(gulp.dest('dist/'));
+        .pipe(gulp.dest('dist/'))
+    ;
 });
 
 gulp.task('clean', function() {
     return del( ['dist/'] );
 });
+

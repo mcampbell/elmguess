@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mcampbell/elmguess#readme",
   "devDependencies": {
+    "browser-sync": "^2.14.0",
     "clear": "0.0.1",
     "del": "^2.2.1",
     "gulp": "^3.9.1",
