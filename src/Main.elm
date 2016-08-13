@@ -64,7 +64,6 @@ type Msg
     = Input String
     | SubmitGuess
     | StartOver
-    | TimeFail
     | TimeSuccess Float
 
 
@@ -96,9 +95,6 @@ update msg model =
         StartOver ->
             ( generateNewAnswer model, Cmd.none )
 
-        TimeFail ->
-            ( model, Cmd.none )
-
         TimeSuccess t ->
             let
                 initSeed =
@@ -112,7 +108,7 @@ update msg model =
 
 divineCurrentTime : Cmd Msg
 divineCurrentTime =
-    Task.perform (\_ -> TimeFail) TimeSuccess Time.now
+    Task.perform TimeSuccess TimeSuccess Time.now
 
 
 generateNewAnswer : Model -> Model
@@ -203,7 +199,6 @@ mainHtml model =
         , guessResult model
         , pastGuesses model
         , startOver model
-        , p [] [ text (toString model) ]
         ]
 
 
