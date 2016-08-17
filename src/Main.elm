@@ -8,6 +8,7 @@ import String exposing (..)
 import Random exposing (..)
 import Time exposing (..)
 import Task exposing (..)
+import Basics.Extra exposing (never)
 
 
 -- Model
@@ -108,7 +109,7 @@ update msg model =
 
 divineCurrentTime : Cmd Msg
 divineCurrentTime =
-    Task.perform TimeSuccess TimeSuccess Time.now
+    Task.perform never TimeSuccess Time.now
 
 
 generateNewAnswer : Model -> Model
@@ -312,7 +313,7 @@ view model =
     div [ class "guessnumber" ]
         [ headerHtml model
         , mainHtml model
-          --        , p [] [ text (toString model) ]
+        , p [] [ text (toString model) ]
         ]
 
 
